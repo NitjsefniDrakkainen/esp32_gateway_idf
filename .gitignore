@@ -1,3 +1,2 @@
-docs_prv/README.adoc
-docs_prv/prompt_example.txt
+docs_prv/*
 build/*
