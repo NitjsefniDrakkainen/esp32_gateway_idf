@@ -18,7 +18,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set ESP-IDF target
-        run: idf.py set-target esp32s3
+        run: |
+          . /opt/esp/idf/export.sh
+          idf.py set-target esp32s3
 
       - name: Build project
-        run: idf.py build
+        run: |
+          . /opt/esp/idf/export.sh
+          idf.py build
