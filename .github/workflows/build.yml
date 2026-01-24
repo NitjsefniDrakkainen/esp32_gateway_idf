@@ -49,7 +49,7 @@ jobs:
       - name: Build with compile_commands
         run: |
           . /opt/esp/idf/export.sh
-          idf.py build
+          idf.py build -D CMAKE_EXPORT_COMPILE_COMMANDS=ON
 
       - name: Run Cppcheck
         run: |
