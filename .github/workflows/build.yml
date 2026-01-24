@@ -32,10 +32,12 @@ jobs:
 
       - name: Run Cppcheck
         run: |
-          cppcheck --enable=all --inconclusive \
+          cppcheck \
+            --enable=all \
+            --inconclusive \
             --std=c11 \
             --project=build/compile_commands.json \
-            --error-exitcode=1 .
+            --error-exitcode=1
 
   # === Other branches: only static analysis ===
   analysis_only:
