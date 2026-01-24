@@ -30,13 +30,16 @@ jobs:
           idf.py fullclean
           idf.py build -D CMAKE_EXPORT_COMPILE_COMMANDS=ON
 
-      - name: Run Cppcheck
+      - name: Filter compile_commands.json for my code
         run: |
-          cppcheck \
-            --enable=all \
-            --inconclusive \
+          jq '[.[] | select(.file | startswith("main/") or startswith("components/bsp/") or startswith("components/hal/"))]' \
+            build/compile_commands.json > build/compile_commands_mycode.json
+
+      - name: Run cppcheck
+        run: |
+          cppcheck --enable=all --inconclusive \
             --std=c11 \
-            --project=build/compile_commands.json \
+            --project=build/compile_commands_mycode.json \
             --error-exitcode=1
 
   # === Other branches: only static analysis ===
