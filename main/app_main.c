@@ -50,6 +50,7 @@ esp_err_t app_main_init(void)
 
 void app_main(void)
 {
+    (void)app_main_init();
     while(1)
     {
         vTaskDelay(pdMS_TO_TICKS(1000));
