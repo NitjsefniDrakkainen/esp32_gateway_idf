@@ -34,3 +34,36 @@ jobs:
         run: |
           . /opt/esp/idf/export.sh
           idf.py build
+
+name: Static Analysis
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  static_analysis:
+    runs-on: ubuntu-latest
+    container:
+      image: espressif/idf:release-v5.4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Source ESP-IDF
+        run: . /opt/esp/idf/export.sh
+
+      - name: Build with compile_commands
+        run: idf.py build
+
+      - name: Run Cppcheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cppcheck
+          cppcheck --enable=all --inconclusive --std=c11 --project=compile_commands.json .
+
+      - name: Run Clang Tidy
+        run: |
+          sudo apt-get install -y clang-tidy
+          clang-tidy -p build/ src/**/*.c || true
