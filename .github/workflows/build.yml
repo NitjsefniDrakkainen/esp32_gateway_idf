@@ -17,6 +17,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Cache ESP-IDF tools
+        uses: actions/cache@v4
+        with:
+          path: /opt/esp/.espressif
+          key: esp-idf-v5.4-${{ runner.os }}-esp32s3
+          restore-keys: |
+            esp-idf-v5.4-${{ runner.os }}-
+
       - name: Set ESP-IDF target
         run: |
           . /opt/esp/idf/export.sh
