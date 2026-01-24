@@ -1,0 +1,24 @@
+name: ESP-IDF Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build:
+    name: Build ESP32 Firmware
+    runs-on: ubuntu-latest
+
+    container:
+      image: espressif/idf:release-v5.4
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set ESP-IDF target
+        run: idf.py set-target esp32
+
+      - name: Build project
+        run: idf.py build
