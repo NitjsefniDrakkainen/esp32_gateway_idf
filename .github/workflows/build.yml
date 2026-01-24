@@ -20,14 +20,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Source ESP-IDF
-        run: . /opt/esp/idf/export.sh
-
-      - name: Set target
-        run: idf.py set-target esp32s3
-
-      - name: Build project (generate compile_commands.json)
+      - name: Source ESP-IDF and build
         run: |
+          . /opt/esp/idf/export.sh
+          idf.py set-target esp32s3
           idf.py fullclean
           idf.py build -D CMAKE_EXPORT_COMPILE_COMMANDS=ON
 
