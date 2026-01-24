@@ -38,6 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: espressif/idf:release-v5.4
+      options: --user root
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -52,12 +53,12 @@ jobs:
 
       - name: Run Cppcheck
         run: |
-          sudo apt-get update
-          sudo apt-get install -y cppcheck
+          apt-get update
+          apt-get install -y cppcheck
           cppcheck --enable=all --inconclusive --std=c11 --project=compile_commands.json .
 
       - name: Run Clang Tidy
         run: |
-          sudo apt-get install -y clang-tidy
+          apt-get install -y clang-tidy
           clang-tidy -p build/ src/**/*.c || true
 
