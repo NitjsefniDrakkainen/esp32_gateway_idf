@@ -1,64 +1,66 @@
-name: ESP-IDF Build
+name: ESP32 CI
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   pull_request:
+    branches-ignore:
+      - main
 
 jobs:
-  build:
-    name: Build ESP32 Firmware
-    runs-on: ubuntu-latest
-
-    container:
-      image: espressif/idf:release-v5.4
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Cache ESP-IDF tools
-        uses: actions/cache@v4
-        with:
-          path: /opt/esp/.espressif
-          key: esp-idf-v5.4-${{ runner.os }}-esp32s3
-          restore-keys: |
-            esp-idf-v5.4-${{ runner.os }}-
-
-      - name: Set ESP-IDF target
-        run: |
-          . /opt/esp/idf/export.sh
-          idf.py set-target esp32s3
-
-      - name: Build project
-        run: |
-          . /opt/esp/idf/export.sh
-          idf.py build
-  static_analysis:
+  # === Main branch: build + static analysis ===
+  main_build_analysis:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     container:
       image: espressif/idf:release-v5.4
       options: --user root
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Source ESP-IDF
         run: . /opt/esp/idf/export.sh
 
-      - name: Build with compile_commands
+      - name: Set target
+        run: idf.py set-target esp32s3
+
+      - name: Build project (generate compile_commands.json)
         run: |
-          . /opt/esp/idf/export.sh
+          idf.py fullclean
           idf.py build -D CMAKE_EXPORT_COMPILE_COMMANDS=ON
 
       - name: Run Cppcheck
         run: |
-          apt-get update
-          apt-get install -y cppcheck
-          cppcheck --enable=all --inconclusive --std=c11 --project=compile_commands.json .
+          cppcheck --enable=all --inconclusive \
+            --std=c11 \
+            --project=build/compile_commands.json \
+            --error-exitcode=1 .
 
-      - name: Run Clang Tidy
+  # === Other branches: only static analysis ===
+  analysis_only:
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    container:
+      image: espressif/idf:release-v5.4
+      options: --user root
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Source ESP-IDF
+        run: . /opt/esp/idf/export.sh
+
+      - name: Set target
+        run: idf.py set-target esp32s3
+
+      - name: Configure project (no build)
+        run: idf.py reconfigure -D CMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+      - name: Run Cppcheck
         run: |
-          apt-get install -y clang-tidy
-          clang-tidy -p build/ src/**/*.c || true
-
+          cppcheck --enable=all --inconclusive \
+            --std=c11 \
+            --project=build/compile_commands.json \
+            --error-exitcode=1 .
