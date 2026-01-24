@@ -46,7 +46,9 @@ jobs:
         run: . /opt/esp/idf/export.sh
 
       - name: Build with compile_commands
-        run: idf.py build
+        run: |
+          . /opt/esp/idf/export.sh
+          idf.py build
 
       - name: Run Cppcheck
         run: |
