@@ -2,16 +2,11 @@ name: ESP32 CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   pull_request:
-    branches-ignore:
-      - main
 
 jobs:
-  # === Main branch: build + static analysis ===
-  main_build_analysis:
-    if: github.ref == 'refs/heads/main'
+  build_and_analyze:
     runs-on: ubuntu-latest
     container:
       image: espressif/idf:release-v5.4
@@ -19,57 +14,38 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Install cppcheck
+
+      - name: Install tools
         run: |
           apt-get update
-          apt-get install -y cppcheck
-      - name: Source ESP-IDF and build
-        run: |
-          . /opt/esp/idf/export.sh
-          idf.py set-target esp32s3
-          idf.py fullclean
-          idf.py build -D CMAKE_EXPORT_COMPILE_COMMANDS=ON
-
-      - name: Filter compile_commands.json for my code
-        run: |
-          apt-get install -y jq
-            jq '[.[] | select(
-                (.file | startswith("main/")) or
-                (.file | startswith("components/bsp/")) or
-                (.file | startswith("components/hal/"))
-                )]' \
-            build/compile_commands.json > build/compile_commands_mycode.json
-
-      - name: Run cppcheck
-        run: |
-          cppcheck --enable=all --inconclusive \
-            --std=c11 \
-            --project=build/compile_commands_mycode.json \
-            --error-exitcode=1
-
-  # === Other branches: only static analysis ===
-  analysis_only:
-    if: github.ref != 'refs/heads/main'
-    runs-on: ubuntu-latest
-    container:
-      image: espressif/idf:release-v5.4
-      options: --user root
-
-    steps:
-      - uses: actions/checkout@v4
+          apt-get install -y cppcheck jq
 
       - name: Source ESP-IDF
         run: . /opt/esp/idf/export.sh
 
-      - name: Set target
-        run: idf.py set-target esp32s3
-
-      - name: Configure project (no build)
-        run: idf.py reconfigure -D CMAKE_EXPORT_COMPILE_COMMANDS=ON
-
-      - name: Run Cppcheck
+      - name: Build (generate compile_commands.json)
         run: |
-          cppcheck --enable=all --inconclusive \
+          idf.py set-target esp32s3
+          idf.py fullclean
+          idf.py build -D CMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+      - name: Filter compile_commands.json (project code only)
+        run: |
+          jq '[.[] | select(
+                (.file | startswith("main/")) or
+                (.file | startswith("components/bsp/")) or
+                (.file | startswith("components/common/")) or
+                (.file | startswith("components/device_service/")) or
+                (.file | startswith("components/drivers/")) or
+                (.file | startswith("components/swc/"))
+              )]' \
+            build/compile_commands.json > build/compile_commands_mycode.json
+
+      - name: Run cppcheck
+        run: |
+          cppcheck \
+            --enable=all \
+            --inconclusive \
             --std=c11 \
-            --project=build/compile_commands.json \
-            --error-exitcode=1 .
+            --project=build/compile_commands_mycode.json \
+            --error-exitcode=1
