@@ -47,5 +47,4 @@ jobs:
             --project=build/compile_commands_mycode.json \
             --suppressions-list=cppcheck_suppressions.txt \
             --error-exitcode=1 \
-            --template=gcc \
-            --force
+            --template=gcc

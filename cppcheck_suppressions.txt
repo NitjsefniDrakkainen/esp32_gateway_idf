@@ -1,20 +1,40 @@
 # -------------------------------
-# Suppress missing includes from system / ESP-IDF headers
+# Suppress all warnings from ESP-IDF headers
 # -------------------------------
-missingInclude:* 
-
-# Suppress unused function warnings from headers
-unusedFunction:* 
+missingInclude:*/opt/esp/idf/*  
+unusedFunction:*/opt/esp/idf/*
 
 # -------------------------------
-# Suppress specific init functions in your project
+# Suppress all warnings from system headers
 # -------------------------------
+# missingInclude:/usr/include/*  
+# unusedFunction:/usr/include/*  
+
+# -------------------------------
+# Suppress warnings from toolchain headers (GCC, libc)
+# -------------------------------
+# missingInclude:/usr/lib/gcc/*  
+# unusedFunction:/usr/lib/gcc/*  
+
+# -------------------------------
+# Suppress warnings from build artifacts (optional)
+# -------------------------------
+# missingInclude:*/build/*  
+# unusedFunction:*/build/*  
+
+# -------------------------------
+# Suppress unusedFunction for ESP32 project-specific init functions
+# -------------------------------
+# -------------------------------------------------
+# Suppress unusedFunction warnings for project-specific init functions
+# -------------------------------------------------
 unusedFunction:*/swc_protocol.c:swc_protocol_init
 unusedFunction:*/swc_webserver.c:swc_webserver_init
 unusedFunction:*/app_main.c:app_main
 unusedFunction:*/swc_endpoint.c:swc_endpoint_init
 unusedFunction:*/swc_mqtt.c:swc_mqtt_init
 unusedFunction:*/swc_config.c:swc_config_init
-unusedFunction:*/swc_gateway.c:bsp_gateway_init
+unusedFunction:*/bsp_gateway.c:bsp_gateway_init
 unusedFunction:*/hal_spi.c:hal_spi_init
 unusedFunction:*/device_service.c:device_service_init
+
