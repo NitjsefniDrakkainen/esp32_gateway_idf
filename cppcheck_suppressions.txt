@@ -3,7 +3,3 @@ unusedFunction:/opt/esp/idf/*
 missingIncludeSystem:/opt/esp/idf/*
 unmatchedSuppression:/opt/esp/idf/*
 
-# Optionally, suppress warnings from standard system headers
-unusedFunction:/usr/include/*
-missingIncludeSystem:/usr/include/*
-# end
