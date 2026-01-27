@@ -48,5 +48,4 @@ jobs:
             --suppressions-list=cppcheck_suppressions.txt \
             --error-exitcode=1 \
             --template=gcc \
-            --force \
-            ./components ./main
+            --force

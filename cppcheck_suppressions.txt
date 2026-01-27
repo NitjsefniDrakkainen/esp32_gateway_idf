@@ -1,5 +1,23 @@
-# Suppress warnings coming from ESP-IDF headers
-unusedFunction:/opt/esp/idf/*
-missingIncludeSystem:/opt/esp/idf/*
-unmatchedSuppression:/opt/esp/idf/*
+# -------------------------------
+# Suppress cppcheck warnings from ESP-IDF headers
+# -------------------------------
+missingInclude:*/opt/esp/idf/*
+unusedFunction:*/opt/esp/idf/*
 
+# -------------------------------
+# Suppress cppcheck warnings from standard system headers
+# -------------------------------
+missingInclude:/usr/include/*
+unusedFunction:/usr/include/*
+
+# -------------------------------
+# Optionally suppress warnings from other system paths (e.g., toolchain)
+# -------------------------------
+missingInclude:/usr/lib/gcc/*   # GCC headers
+unusedFunction:/usr/lib/gcc/*
+
+# -------------------------------
+# Suppress false positives in generated or external files (optional)
+# -------------------------------
+missingInclude:*/build/*
+unusedFunction:*/build/*
