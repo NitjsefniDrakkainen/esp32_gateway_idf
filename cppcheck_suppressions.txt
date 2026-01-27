@@ -1,4 +1,33 @@
+# -------------------------------
+# Suppress all warnings from ESP-IDF headers
+# -------------------------------
+missingInclude:*/opt/esp/idf/*  
+unusedFunction:*/opt/esp/idf/*
+
+# -------------------------------
+# Suppress all warnings from system headers
+# -------------------------------
+# missingInclude:/usr/include/*  
+# unusedFunction:/usr/include/*  
+
+# -------------------------------
+# Suppress warnings from toolchain headers (GCC, libc)
+# -------------------------------
+# missingInclude:/usr/lib/gcc/*  
+# unusedFunction:/usr/lib/gcc/*  
+
+# -------------------------------
+# Suppress warnings from build artifacts (optional)
+# -------------------------------
+# missingInclude:*/build/*  
+# unusedFunction:*/build/*  
+
+# -------------------------------
+# Suppress unusedFunction for ESP32 project-specific init functions
+# -------------------------------
+# -------------------------------------------------
 # Suppress unusedFunction warnings for project-specific init functions
+# -------------------------------------------------
 unusedFunction:*/swc_protocol.c:swc_protocol_init
 unusedFunction:*/swc_webserver.c:swc_webserver_init
 unusedFunction:*/app_main.c:app_main
@@ -8,3 +37,4 @@ unusedFunction:*/swc_config.c:swc_config_init
 unusedFunction:*/bsp_gateway.c:bsp_gateway_init
 unusedFunction:*/hal_spi.c:hal_spi_init
 unusedFunction:*/device_service.c:device_service_init
+

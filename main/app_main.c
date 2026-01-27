@@ -9,7 +9,7 @@
  * and relationships with other components (if needed).
  */
 
-// #include "app_main.h"
+#include "app_main.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_err.h"
@@ -63,5 +63,11 @@ void app_main(void)
 
 static void _app_main_private_function(void)
 {
+    bsp_init();
+    swc_config_init();
+    swc_endpoint_init();
+    swc_mqtt_init();
+    swc_protocol_init();
+    swc_webserver_init();
     ESP_LOGD(TAG, "Private function executed");
 }
