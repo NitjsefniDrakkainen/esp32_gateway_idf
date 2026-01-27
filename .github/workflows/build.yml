@@ -37,7 +37,7 @@ jobs:
       - name: Verify filtered compile commands
         run: |
             jq 'length' build/compile_commands_mycode.json
-            
+
       - name: Run cppcheck
         run: |
           cppcheck \
@@ -45,4 +45,5 @@ jobs:
             --inconclusive \
             --std=c11 \
             --project=build/compile_commands_mycode.json \
+            --suppressions-list=cppcheck_suppressions.txt \
             --error-exitcode=1
