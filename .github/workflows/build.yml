@@ -25,9 +25,10 @@ jobs:
 
       - name: Build (generate compile_commands.json)
         run: |
-          idf.py set-target esp32s3
-          idf.py fullclean
-          idf.py build -D CMAKE_EXPORT_COMPILE_COMMANDS=ON
+            . /opt/esp/idf/export.sh
+            idf.py set-target esp32s3
+            idf.py fullclean
+            idf.py build -D CMAKE_EXPORT_COMPILE_COMMANDS=ON
 
       - name: Filter compile_commands.json (project code only)
         run: |
