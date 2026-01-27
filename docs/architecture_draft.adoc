@@ -1,0 +1,273 @@
+= ESP32 MQTT Gateway – Architecture Overview
+:toc:
+:toclevels: 2
+:sectnums:
+
+== Purpose
+
+This document provides a high-level architectural overview of the ESP32-based MQTT
+Gateway. It describes the main software layers, responsibilities, data flow, and
+key architectural decisions.
+
+The goal is to establish a clear system-wide mental model before defining detailed
+component and interface specifications.
+
+== System Context
+
+The ESP32 MQTT Gateway operates as a field gateway between distributed endpoint
+devices and a centralized automation system via MQTT.
+
+Typical deployment scenarios include:
+- Residential environments (house, flat)
+- Small commercial or industrial installations
+
+The gateway is responsible for:
+- Communicating with heterogeneous RF endpoints
+- Managing endpoint lifecycle and capabilities
+- Translating device data and commands to/from MQTT
+- Providing local configuration and diagnostics via a web interface
+
+== Architectural Principles
+
+The architecture is based on the following principles:
+
+- Separation of concerns between hardware, services, and application logic
+- Portability of device drivers across platforms and MCUs
+- Clear ownership of data and control flow
+- Controlled and validated access to device functionality
+- Compatibility with ESP-IDF build and runtime model
+- AUTOSAR-inspired Software Component (SWC) structure at application level
+
+== Layered Architecture Overview
+
+The system is organized into the following logical layers:
+
+----
++------------------------------------------------------+
+| Software Components (SWCs)                            |
+|                                                      |
+|  - MQTT SWC                                          |
+|  - Protocol SWC                                      |
+|  - Endpoint Registry SWC                             |
+|  - Webserver SWC                                     |
+|  - Configuration SWC                                 |
++-----------------------------▲------------------------+
+                              |
++-----------------------------┴------------------------+
+| Device Service Layer                                  |
+|                                                      |
+|  - Logical endpoint abstraction                      |
+|  - Capability and state management                   |
+|  - Diagnostics and controlled access                 |
++-----------------------------▲------------------------+
+                              |
++-----------------------------┴------------------------+
+| Board Support Package (BSP)                           |
+|                                                      |
+|  - Board-specific wiring                             |
+|  - Radio instances                                   |
+|  - Physical hardware description                     |
++-----------------------------▲------------------------+
+                              |
++-----------------------------┴------------------------+
+| Device Drivers (RTOS-independent)                     |
+|                                                      |
+|  - NRF24 driver                                      |
+|  - CC1101 driver                                     |
+|  - Driver HAL interface                              |
++-----------------------------▲------------------------+
+                              |
++-----------------------------┴------------------------+
+| ESP-IDF Platform                                     |
+|                                                      |
+|  - FreeRTOS                                          |
+|  - Wi-Fi / TCP-IP                                    |
+|  - SPI, GPIO                                         |
+|  - SPIFFS                                            |
++------------------------------------------------------+
+----
+
+== ESP-IDF and RTOS Usage
+
+ESP-IDF provides the platform layer, including:
+- FreeRTOS kernel
+- Networking stack
+- Peripheral drivers (SPI, GPIO)
+- Filesystem (SPIFFS)
+- Build system (CMake)
+
+FreeRTOS is used at the system and application levels.
+Device drivers are explicitly designed to be RTOS-independent.
+
+== Device Drivers
+
+Device drivers implement protocol-level and register-level logic for RF devices.
+
+Characteristics:
+- No dependency on ESP-IDF or FreeRTOS
+- No direct access to GPIO, SPI, or timing primitives
+- All hardware interaction is performed via a driver HAL interface
+
+Drivers are reusable across different MCUs and boards.
+
+== Driver HAL
+
+The driver HAL is a thin abstraction layer that decouples drivers from platform-
+specific implementations.
+
+It provides:
+- SPI transfer functions
+- GPIO control
+- Timing and delay services
+- Optional critical section hooks
+
+The driver HAL is implemented by the BSP or platform adapter.
+
+== Board Support Package (BSP)
+
+The BSP represents the physical gateway hardware.
+
+Responsibilities:
+- Instantiate and configure radio drivers
+- Bind drivers to SPI buses and GPIOs
+- Describe available radios and board capabilities
+- Provide access to hardware resources in a board-centric manner
+
+The BSP does not implement protocol logic and does not expose low-level registers.
+
+== Device Service Layer
+
+The Device Service Layer is the central abstraction for logical endpoint management.
+
+Responsibilities:
+- Represent endpoint devices independent of physical radios
+- Track endpoint identity, capabilities, and state
+- Route messages between SWCs and BSP
+- Provide validated diagnostics and control APIs
+- Enforce access policies to underlying drivers
+
+All application-facing logic interacts with devices exclusively via this layer.
+
+== Software Components (SWCs)
+
+The Software Component layer contains AUTOSAR-inspired functional components
+implementing gateway behavior.
+
+=== Protocol SWC
+
+Defines the communication protocol between endpoints and the gateway.
+
+Responsibilities:
+- Endpoint identification and addressing
+- Capability description
+- Autoregistration and handshake procedures
+- Message framing and versioning
+
+=== Endpoint Registry SWC
+
+Maintains a registry of known endpoints.
+
+Responsibilities:
+- Create and manage logical endpoints
+- Associate endpoints with radios and drivers
+- Persist endpoint metadata
+- Provide lookup services for other SWCs
+
+=== MQTT SWC
+
+Handles all MQTT-related functionality.
+
+Responsibilities:
+- Publish endpoint data to MQTT
+- Subscribe to command topics
+- Translate MQTT messages to internal commands
+- Support MQTT discovery mechanisms (e.g. Home Assistant)
+
+=== Webserver SWC
+
+Provides a human-facing configuration and diagnostics interface.
+
+Responsibilities:
+- Expose HTTP endpoints
+- Display system and endpoint status
+- Allow configuration changes
+
+The webserver interacts only with SWCs and the Device Service Layer.
+
+=== Configuration SWC
+
+Manages persistent configuration.
+
+Responsibilities:
+- Load and store configuration data in SPIFFS
+- Provide configuration access APIs
+- Validate and version configuration data
+
+== Data Flow
+
+=== Endpoint to MQTT
+
+1. Endpoint transmits RF data
+2. Driver receives and decodes raw payload
+3. BSP identifies the radio instance
+4. Device Service maps payload to logical endpoint
+5. Protocol SWC validates and interprets message
+6. Endpoint Registry updates endpoint state
+7. MQTT SWC publishes data to broker
+
+=== MQTT to Endpoint
+
+1. MQTT broker delivers command
+2. MQTT SWC parses and validates command
+3. Protocol SWC encodes endpoint message
+4. Device Service selects target endpoint
+5. BSP routes message to correct radio
+6. Driver transmits RF payload
+
+=== Endpoint Autoregistration
+
+1. Unknown endpoint sends registration message
+2. Protocol SWC parses descriptor
+3. Endpoint Registry creates logical endpoint
+4. Configuration SWC persists metadata
+5. MQTT SWC publishes discovery information
+
+== Storage and Web Assets
+
+- SPIFFS is used for non-volatile storage
+- Stored data includes:
+  - Gateway configuration
+  - Endpoint metadata
+  - Protocol-related state
+- Web UI HTML/CSS/JS files are stored in SPIFFS
+
+== Repository Structure
+
+----
+esp32_gateway/
+├── main/
+├── components/
+│   ├── sw_components/
+│   ├── device_service/
+│   ├── bsp/
+│   ├── drivers/
+│   └── common/
+├── spiffs/
+│   ├── www/
+│   └── config/
+└── docs/
+    └── architecture_overview.adoc
+----
+
+Each directory under `components/` is a standalone ESP-IDF component with its own
+CMakeLists.txt.
+
+== Out of Scope
+
+This document does not define:
+- Detailed driver APIs
+- Protocol message formats
+- MQTT topic structure
+- Task priorities or timing constraints
+
+These topics are covered in dedicated specification documents.

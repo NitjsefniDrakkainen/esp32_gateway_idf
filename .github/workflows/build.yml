@@ -33,7 +33,8 @@ jobs:
       - name: Filter compile_commands.json for my code
         run: |
           apt-get install -y jq
-          jq '[.[] | select(.file | startswith("main/") or startswith("components/bsp/") or startswith("components/hal/"))]' \
+          jq '[.[] | select(.file | startswith("main/") \
+            or startswith("components/bsp/") or startswith("components/hal/"))]' \
             build/compile_commands.json > build/compile_commands_mycode.json
 
       - name: Run cppcheck
