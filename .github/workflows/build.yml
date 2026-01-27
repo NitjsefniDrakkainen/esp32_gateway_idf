@@ -48,5 +48,6 @@ jobs:
             --suppressions-list=cppcheck_suppressions.txt \
             --suppress=missingIncludeSystem \
             --suppress=missingInclude \
+            --suppress=unusedFunction:app_main \
             --error-exitcode=1 \
             --template=gcc
