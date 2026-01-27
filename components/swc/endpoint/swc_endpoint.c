@@ -9,6 +9,7 @@
  * and relationships with other components (if needed).
  */
 
+ #include "device_service/device_service.h"
 #include "swc_endpoint/swc_endpoint.h"
 #include "esp_log.h"
 
@@ -51,5 +52,6 @@ esp_err_t swc_endpoint_init(void)
 
 static void _swc_endpoint_private_function(void)
 {
+    device_service_init();
     ESP_LOGD(TAG, "Private function executed");
 }
