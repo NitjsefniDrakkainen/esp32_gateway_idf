@@ -31,4 +31,5 @@ unusedFunction:*/opt/esp/idf/*
 
 unusedFunction:*/app_main.c:app_main
 unusedFunction:main/app_main.c:app_main
+unusedFunction:app_main
 
