@@ -32,6 +32,7 @@ jobs:
 
       - name: Filter compile_commands.json for my code
         run: |
+          apt-get install -y jq
             jq '[.[] | select(
                 (.file | startswith("main/")) or
                 (.file | startswith("components/bsp/")) or
