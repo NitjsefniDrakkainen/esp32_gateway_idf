@@ -32,9 +32,12 @@ jobs:
 
       - name: Filter compile_commands.json (project code only)
         run: |
-          jq '[.[] | select((.file | startswith("main/")) or (.file | startswith("components/bsp/")) or (.file | startswith("components/common/")) or (.file | startswith("components/device_service/")) or (.file | startswith("components/drivers/")) or (.file | startswith("components/swc/")))]' \
-            build/compile_commands.json > build/compile_commands_mycode.json
+          jq '[.[] | select((.file | contains("main/")) or (.file | contains("components/bsp/")) or (.file | contains("components/common/")) or (.file | contains("components/device_service/")) or (.file | contains("components/drivers/")) or (.file | contains("components/swc/")))]' build/compile_commands.json > build/compile_commands_mycode.json
 
+      - name: Verify filtered compile commands
+        run: |
+            jq 'length' build/compile_commands_mycode.json
+            
       - name: Run cppcheck
         run: |
           cppcheck \
