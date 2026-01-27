@@ -1,23 +1,29 @@
 # -------------------------------
-# Suppress cppcheck warnings from ESP-IDF headers
+# Suppress all warnings from ESP-IDF headers
 # -------------------------------
-missingInclude:*/opt/esp/idf/*
+missingInclude:*/opt/esp/idf/*  
 unusedFunction:*/opt/esp/idf/*
 
 # -------------------------------
-# Suppress cppcheck warnings from standard system headers
+# Suppress all warnings from system headers
 # -------------------------------
-missingInclude:/usr/include/*
-unusedFunction:/usr/include/*
+missingInclude:/usr/include/*  
+unusedFunction:/usr/include/*  
 
 # -------------------------------
-# Optionally suppress warnings from other system paths (e.g., toolchain)
+# Suppress warnings from toolchain headers (GCC, libc)
 # -------------------------------
-missingInclude:/usr/lib/gcc/*   # GCC headers
-unusedFunction:/usr/lib/gcc/*
+missingInclude:/usr/lib/gcc/*  
+unusedFunction:/usr/lib/gcc/*  
 
 # -------------------------------
-# Suppress false positives in generated or external files (optional)
+# Suppress warnings from build artifacts (optional)
 # -------------------------------
-missingInclude:*/build/*
-unusedFunction:*/build/*
+missingInclude:*/build/*  
+unusedFunction:*/build/*  
+
+# -------------------------------
+# Suppress unusedFunction for ESP32 project-specific init functions
+# -------------------------------
+unusedFunction:*/components/*_init.c:*  
+unusedFunction:*/main/app_main.c:*
