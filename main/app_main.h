@@ -44,7 +44,7 @@ extern "C" {
  *
  * @return esp_err_t ESP_OK on success, error code otherwise.
  */
-esp_err_t app_main_init(void);
+// esp_err_t app_main_init(void);
 
 #ifdef __cplusplus
 }
