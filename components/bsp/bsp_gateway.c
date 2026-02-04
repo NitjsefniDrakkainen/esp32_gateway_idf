@@ -48,7 +48,6 @@ typedef struct {
 static nrf24_t s_nrf24_devices[BSP_NRF24_COUNT];
 static bsp_nrf24_ctx_t s_nrf24_ctx[BSP_NRF24_COUNT];
 static nrf24_hal_t s_nrf24_hal[BSP_NRF24_COUNT];
-static bool s_nrf24_initialized[BSP_NRF24_COUNT] = {false};
 
 /* -------------------------------------------------------------------------- */
 /*                             Private prototypes                             */
@@ -92,7 +91,6 @@ esp_err_t bsp_init(void)
         ESP_LOGE(TAG, "Failed to initialize NRF24 radio 1");
         return ret;
     }
-    s_nrf24_initialized[BSP_NRF24_1] = true;
 
     /* Initialize NRF24 radio 2 */
     ret = _bsp_init_nrf24(&s_nrf24_devices[BSP_NRF24_2], &s_nrf24_hal[BSP_NRF24_2],
@@ -102,7 +100,6 @@ esp_err_t bsp_init(void)
         ESP_LOGE(TAG, "Failed to initialize NRF24 radio 2");
         return ret;
     }
-    s_nrf24_initialized[BSP_NRF24_2] = true;
 
     ESP_LOGI(TAG, "bsp_gateway initialized");
     return ESP_OK;
@@ -113,7 +110,7 @@ nrf24_t* bsp_get_nrf24_handle(bsp_nrf24_id_t id)
     if (id >= BSP_NRF24_COUNT) {
         return NULL;
     }
-    return s_nrf24_initialized[id] ? &s_nrf24_devices[id] : NULL;
+    return &s_nrf24_devices[id];
 }
 
 /* -------------------------------------------------------------------------- */
