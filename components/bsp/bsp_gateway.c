@@ -49,6 +49,12 @@ static nrf24_t s_nrf24_devices[BSP_NRF24_COUNT];
 static bsp_nrf24_ctx_t s_nrf24_ctx[BSP_NRF24_COUNT];
 static nrf24_hal_t s_nrf24_hal[BSP_NRF24_COUNT];
 
+/* Static array to map IRQ pins to device handles for ISR context */
+static struct {
+    gpio_num_t pin;
+    nrf24_t *dev;
+} s_nrf24_irq_map[BSP_NRF24_COUNT];
+
 /* -------------------------------------------------------------------------- */
 /*                             Private prototypes                             */
 /* -------------------------------------------------------------------------- */
@@ -57,6 +63,7 @@ static esp_err_t _bsp_init_spi(void);
 static esp_err_t _bsp_init_nrf24_gpio(const bsp_nrf24_ctx_t *ctx);
 static esp_err_t _bsp_init_nrf24(nrf24_t *dev, nrf24_hal_t *hal, bsp_nrf24_ctx_t *ctx,
                                   gpio_num_t csn, gpio_num_t ce, gpio_num_t irq);
+static esp_err_t _bsp_init_nrf24_interrupts(void);
 
 /* NRF24 HAL callbacks */
 static int _bsp_nrf24_spi_transfer(void *ctx, const uint8_t *tx, uint8_t *rx, size_t len);
@@ -67,6 +74,27 @@ static void _bsp_nrf24_ce_high(void *ctx);
 static void _bsp_nrf24_delay_us(uint32_t us);
 static void _bsp_nrf24_delay_ms(uint32_t ms);
 static int _bsp_nrf24_irq_read(void *ctx);
+
+/**
+ * @brief GPIO ISR handler for NRF24 IRQ pins.
+ *
+ * Called from interrupt context when NRF24 IRQ pin falls (active-low signal).
+ * Looks up device handle and signals its semaphore via nrf24_irq_handler().
+ *
+ * @param arg GPIO pin number (cast to void*)
+ */
+static void IRAM_ATTR _bsp_nrf24_gpio_isr_handler(void *arg)
+{
+    gpio_num_t pin = (gpio_num_t)(int)arg;
+
+    /* Find device handle for this pin */
+    for (int i = 0; i < BSP_NRF24_COUNT; i++) {
+        if (s_nrf24_irq_map[i].pin == pin && s_nrf24_irq_map[i].dev != NULL) {
+            nrf24_irq_handler(s_nrf24_irq_map[i].dev);
+            return;
+        }
+    }
+}
 
 /* -------------------------------------------------------------------------- */
 /*                              Public functions                              */
@@ -101,6 +129,13 @@ esp_err_t bsp_init(void)
         return ret;
     }
 
+    /* Initialize NRF24 interrupts */
+    ret = _bsp_init_nrf24_interrupts();
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to initialize NRF24 interrupts");
+        return ret;
+    }
+
     ESP_LOGI(TAG, "bsp_gateway initialized");
     return ESP_OK;
 }
@@ -116,6 +151,67 @@ nrf24_t* bsp_get_nrf24_handle(bsp_nrf24_id_t id)
 /* -------------------------------------------------------------------------- */
 /*                              Private functions                             */
 /* -------------------------------------------------------------------------- */
+
+/**
+ * @brief Initialize GPIO interrupts for NRF24 IRQ pins.
+ *
+ * Configures edge-triggered interrupts on both NRF24 IRQ pins.
+ * Must be called after nrf24_init() so device handles and semaphores exist.
+ *
+ * @return esp_err_t ESP_OK on success, error code otherwise.
+ */
+static esp_err_t _bsp_init_nrf24_interrupts(void)
+{
+    esp_err_t ret;
+
+    /* Install GPIO ISR service if not already installed */
+    ret = gpio_install_isr_service(0);
+    if (ret != ESP_OK && ret != ESP_ERR_INVALID_STATE) {
+        /* ESP_ERR_INVALID_STATE means already installed - that's OK */
+        ESP_LOGE(TAG, "Failed to install GPIO ISR service: %s", esp_err_to_name(ret));
+        return ret;
+    }
+
+    /* Configure interrupt for NRF24 radio 1 */
+    s_nrf24_irq_map[BSP_NRF24_1].pin = BSP_NRF1_PIN_IRQ;
+    s_nrf24_irq_map[BSP_NRF24_1].dev = &s_nrf24_devices[BSP_NRF24_1];
+
+    ret = gpio_set_intr_type(BSP_NRF1_PIN_IRQ, GPIO_INTR_NEGEDGE);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to set interrupt type for NRF24_1 IRQ pin");
+        return ret;
+    }
+
+    ret = gpio_isr_handler_add(BSP_NRF1_PIN_IRQ, _bsp_nrf24_gpio_isr_handler,
+                                (void*)(int)BSP_NRF1_PIN_IRQ);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to add ISR handler for NRF24_1 IRQ pin");
+        return ret;
+    }
+
+    ESP_LOGI(TAG, "NRF24_1 interrupt configured (IRQ pin: %d, edge-triggered)", BSP_NRF1_PIN_IRQ);
+
+    /* Configure interrupt for NRF24 radio 2 */
+    s_nrf24_irq_map[BSP_NRF24_2].pin = BSP_NRF2_PIN_IRQ;
+    s_nrf24_irq_map[BSP_NRF24_2].dev = &s_nrf24_devices[BSP_NRF24_2];
+
+    ret = gpio_set_intr_type(BSP_NRF2_PIN_IRQ, GPIO_INTR_NEGEDGE);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to set interrupt type for NRF24_2 IRQ pin");
+        /* Continue with partial setup - radio 1 will still work */
+    }
+
+    ret = gpio_isr_handler_add(BSP_NRF2_PIN_IRQ, _bsp_nrf24_gpio_isr_handler,
+                                (void*)(int)BSP_NRF2_PIN_IRQ);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to add ISR handler for NRF24_2 IRQ pin");
+        /* Continue - radio 1 will still work */
+    } else {
+        ESP_LOGI(TAG, "NRF24_2 interrupt configured (IRQ pin: %d, edge-triggered)", BSP_NRF2_PIN_IRQ);
+    }
+
+    return ESP_OK;
+}
 
 static esp_err_t _bsp_init_spi(void)
 {
@@ -154,7 +250,7 @@ static esp_err_t _bsp_init_nrf24_gpio(const bsp_nrf24_ctx_t *ctx)
     io_conf.mode = GPIO_MODE_INPUT;
     io_conf.pull_up_en = GPIO_PULLUP_ENABLE;
     io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
-    io_conf.intr_type = GPIO_INTR_DISABLE;
+    io_conf.intr_type = GPIO_INTR_DISABLE;  /* Will be enabled later in _bsp_init_nrf24_interrupts */
 
     return gpio_config(&io_conf);
 }
