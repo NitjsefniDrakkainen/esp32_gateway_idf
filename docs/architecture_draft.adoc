@@ -183,6 +183,25 @@ Responsibilities:
 - Translate MQTT messages to internal commands
 - Support MQTT discovery mechanisms (e.g. Home Assistant)
 
+=== Wi-Fi Manager SWC
+
+Manages Wi-Fi connectivity and network lifecycle for the gateway.
+
+Responsibilities:
+- Configure Wi-Fi station and access point modes
+- Manage connection to configured infrastructure networks
+- Provide fallback captive portal / AP mode for initial provisioning
+- Monitor connection status and signal quality
+- Handle reconnection and credential updates
+- Expose network status to other SWCs and the web interface
+
+The Wi-Fi Manager SWC encapsulates all ESP-IDF Wi-Fi and TCP/IP stack interactions.
+Other components must not directly access Wi-Fi APIs.
+
+The component provides event-driven notifications (e.g. connected, disconnected,
+IP acquired) that are consumed by the MQTT SWC, Webserver SWC, and Configuration SWC
+to coordinate startup order and user feedback.
+
 === Webserver SWC
 
 Provides a human-facing configuration and diagnostics interface.

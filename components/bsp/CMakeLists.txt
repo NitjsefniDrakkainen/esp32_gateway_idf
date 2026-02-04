@@ -4,5 +4,5 @@ idf_component_register(
     INCLUDE_DIRS
         "include"
     REQUIRES
-        drivers common
+        drivers common freertos driver
 )
