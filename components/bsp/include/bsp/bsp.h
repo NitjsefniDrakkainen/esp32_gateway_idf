@@ -55,7 +55,15 @@ extern "C" {
 /* -------------------------------------------------------------------------- */
 /*                                Public types                                */
 /* -------------------------------------------------------------------------- */
-/* none */
+
+/**
+ * @brief NRF24 radio identifier enumeration.
+ */
+typedef enum {
+    BSP_NRF24_1 = 0,    /**< NRF24 radio 1 */
+    BSP_NRF24_2,        /**< NRF24 radio 2 */
+    BSP_NRF24_COUNT     /**< Total number of NRF24 radios */
+} bsp_nrf24_id_t;
 
 /* -------------------------------------------------------------------------- */
 /*                            Public API functions                            */
@@ -71,18 +79,12 @@ extern "C" {
 esp_err_t bsp_init(void);
 
 /**
- * @brief Get handle to NRF24 radio 1.
+ * @brief Get handle to an NRF24 radio by ID.
  *
- * @return Pointer to NRF24 driver handle, or NULL if not initialized.
+ * @param id NRF24 radio identifier (BSP_NRF24_1 or BSP_NRF24_2)
+ * @return Pointer to NRF24 driver handle, or NULL if invalid ID or not initialized.
  */
-nrf24_t* bsp_get_nrf24_handle(void);
-
-/**
- * @brief Get handle to NRF24 radio 2.
- *
- * @return Pointer to NRF24 driver handle, or NULL if not initialized.
- */
-nrf24_t* bsp_get_nrf24_2_handle(void);
+nrf24_t* bsp_get_nrf24_handle(bsp_nrf24_id_t id);
 
 #ifdef __cplusplus
 }
