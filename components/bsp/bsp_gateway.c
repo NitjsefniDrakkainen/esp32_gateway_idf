@@ -120,7 +120,7 @@ esp_err_t bsp_init(void)
         ESP_LOGE(TAG, "Failed to initialize NRF24 radio 1");
         return ret;
     }
-
+vTaskDelay(1 / portTICK_PERIOD_MS);
     /* Initialize NRF24 radio 2 */
     ret = _bsp_init_nrf24(&s_nrf24_devices[BSP_NRF24_2], &s_nrf24_hal[BSP_NRF24_2],
                           &s_nrf24_ctx[BSP_NRF24_2],
@@ -269,7 +269,7 @@ static esp_err_t _bsp_init_nrf24(nrf24_t *dev, nrf24_hal_t *hal, bsp_nrf24_ctx_t
     hal_spi_device_config_t spi_cfg = {
         .clock_speed_hz = BSP_NRF24_SPI_CLOCK_HZ,
         .mode = 0,          /* NRF24 uses SPI mode 0 */
-        .queue_size = 1,
+        .queue_size = 3,
     };
 
     ret = hal_spi_device_add(HAL_SPI_HOST_DEFAULT, &spi_cfg, &ctx->spi_handle);

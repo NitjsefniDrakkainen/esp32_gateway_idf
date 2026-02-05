@@ -159,8 +159,9 @@ static void _nrf24_rx_task(void *pvParameters)
         vTaskDelete(NULL);
         return;
     }
-
-    ESP_LOGI(TAG, "Radio %d: RX task started, waiting for interrupts...", radio_id);
+    uint8_t status = 0;
+    nrf24_get_status(radio, &status);
+    ESP_LOGI(TAG, "Radio %d: RX task started, waiting for interrupts... 0x%2X", radio_id, status);
 
     while (1) {
         /* Wait indefinitely for IRQ - dedicated task, no timeout needed */

@@ -24,9 +24,9 @@ extern "C" {
 /* -------------------------------------------------------------------------- */
 
 /* SPI bus pins (shared by all SPI devices) */
-#define BSP_SPI_PIN_MOSI    11
-#define BSP_SPI_PIN_MISO    13
-#define BSP_SPI_PIN_SCLK    12
+#define BSP_SPI_PIN_MOSI    9
+#define BSP_SPI_PIN_MISO    8
+#define BSP_SPI_PIN_SCLK    7
 
 /* NRF24 radio 1 pins */
 #define BSP_NRF1_PIN_CSN    2
